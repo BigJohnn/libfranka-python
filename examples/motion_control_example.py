@@ -52,7 +52,7 @@ def main():
         args = args.parse_args()
         # if no args, use localhost
         if not args.ip:
-            args.ip = "localhost"
+            args.ip = "127.0.0.1"
         robot = Robot(args.ip)  # Replace with your robot's IP
         # Set collision behavior
         lower_torque_thresholds = [1000.0] * 7  # Nm
