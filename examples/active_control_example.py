@@ -48,18 +48,12 @@ def main():
         while not motion_finished:
             # Read robot state and duration
             robot_state, duration = active_control.readOnce()
-            # Get duration between control cycles
-            if hasattr(robot_state, 'duration'):
-                duration = robot_state.duration
-            else:
-                # If duration is not available, estimate it
-                duration = 0.001  # 1ms
-            
+ 
             # Update time
-            time_elapsed += duration
+            time_elapsed += duration.to_sec()
             
             # On first iteration, capture initial position
-            if time_elapsed <= duration:
+            if time_elapsed <= duration.to_sec():
                 initial_position = robot_state.q_d if hasattr(robot_state, 'q_d') else robot_state.q
             
             # Calculate delta angle using the same formula as in C++ example
