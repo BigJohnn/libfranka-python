@@ -6,6 +6,7 @@
 
 #include <Eigen/Core>
 #include <franka/robot.h>
+#include <franka/gripper.h>
 #include <franka/active_control_base.h>
 #include <franka/active_control.h>
 #include <franka/active_motion_generator.h>
@@ -50,6 +51,29 @@ public:
 private:
     std::unique_ptr<franka::Robot> robot_;
     std::unique_ptr<RealtimeControl> realtime_control_;
+};
+
+class PyGripper {
+public:
+    explicit PyGripper(const std::string& franka_address);
+    ~PyGripper() = default;
+
+    bool homing();
+    bool grasp(double width,
+             double speed,
+             double force,
+             double epsilon_inner = 0.005,
+             double epsilon_outer = 0.005);
+
+    franka::GripperState readOnce();
+
+    bool stop();
+    bool move(double width, double speed);
+    franka::Gripper::ServerVersion serverVersion();
+    
+
+private:
+    std::unique_ptr<franka::Gripper> gripper_;
 };
 
 } // namespace franka_bindings 

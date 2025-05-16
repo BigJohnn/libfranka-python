@@ -78,6 +78,42 @@ RealtimeControl* PyRobot::getRealtimeControl() {
     return realtime_control_.get();
 }
 
+PyGripper::PyGripper(const std::string& franka_address) 
+    : gripper_(std::make_unique<franka::Gripper>(franka_address)) {}
+
+bool PyGripper::homing()
+{
+    return gripper_->homing();
+}
+
+bool PyGripper::grasp(double width,
+            double speed,
+            double force,
+            double epsilon_inner,
+            double epsilon_outer)
+{
+    return gripper_->grasp(width, speed, force, epsilon_inner, epsilon_outer);    
+}
+
+franka::GripperState PyGripper::readOnce()
+{
+    return gripper_->readOnce();
+}
+
+bool PyGripper::stop()
+{
+    return gripper_->stop();
+}
+bool PyGripper::move(double width, double speed)
+{
+    return gripper_->move(width, speed);
+}
+
+franka::Gripper::ServerVersion PyGripper::serverVersion()
+{
+    return gripper_->serverVersion();
+}
+
 PYBIND11_MODULE(franka_bindings, m) {
     // Bind exceptions
     py::register_exception<franka::Exception>(m, "FrankaException");
@@ -115,7 +151,7 @@ PYBIND11_MODULE(franka_bindings, m) {
         .def_readwrite("O_T_EE_d", &franka::RobotState::O_T_EE_d)
         .def_readwrite("F_T_EE", &franka::RobotState::F_T_EE)
         .def_readwrite("EE_T_K", &franka::RobotState::EE_T_K);
-
+    
     // Bind ActiveControlBase
     py::class_<franka::ActiveControlBase>(m, "ActiveControlBase")
         .def("readOnce", [](franka::ActiveControlBase& self) {
@@ -177,6 +213,24 @@ PYBIND11_MODULE(franka_bindings, m) {
             self.startRealtimeControl();
         })
         .def("get_realtime_control", &PyRobot::getRealtimeControl, py::return_value_policy::reference);
+    
+    // Bind franka::GripperState
+    py::class_<franka::GripperState>(m, "GripperState")
+        .def_readwrite("width", &franka::GripperState::width)
+        .def_readwrite("max_width", &franka::GripperState::max_width)
+        .def_readwrite("is_grasped", &franka::GripperState::is_grasped)
+        .def_readwrite("temperature", &franka::GripperState::temperature)
+        .def_readwrite("time", &franka::GripperState::time);
+
+    // Bind PyGripper
+    py::class_<PyGripper>(m, "Gripper")
+        .def(py::init<const std::string&>())
+        .def("homing", &PyGripper::homing)
+        .def("grasp", &PyGripper::grasp)
+        .def("read_once", &PyGripper::readOnce)
+        .def("stop", &PyGripper::stop)
+        .def("move", &PyGripper::move)
+        .def("server_version", &PyGripper::serverVersion);
 
     // Add docstring
     m.doc() = "Python bindings for libfranka realtime control";
